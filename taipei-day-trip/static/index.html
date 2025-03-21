@@ -1,11 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Index</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body>
-  
+  <!-- 導覽列 -->
+  <nav class="nav">
+    <div class="nav__container">
+      <h1 class="nav__logo"><a href="/">台北一日遊</a></h1>
+      <ul class="nav__menu">
+        <li class="nav__item"><a href="#">預定行程</a></li>
+        <li class="nav__item"><a href="#">登入/註冊</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- 主視覺區 -->
+  <header class="hero">
+    <div class="hero__container">
+      <h2 class="hero__title">輕鬆享受台北一日悠閒</h2>
+      <p class="hero__description">探索每個角落，體驗城市的深度旅遊行程</p>
+      <div class="search">
+        <input type="text" class="search__input" id="searchInput" placeholder="輸入景點名稱查詢">
+        <button class="search__button" id="searchBtn"><img
+            src="https://s3-alpha-sig.figma.com/img/2287/3bf8/d5750c31481dec07f7101a5fb69baa37?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=i7dS4ztAhzgIUxgTrhc2Qupg4~JpmWUHs9tT00QSV0W61klw8vLmRfVhB3Su3UYSh8xeBDteKSGEVdWqiBCs9Ogt~sG2qiJithMQfK0kHhfBOPXnisTgII~b197Jv8mj1IkTWPHvkj8CKOuaIrv~aabQd7hQRQENN73Qtr4OqOUH-ZVhLHrcceWSCt4W0J8nrwKcMSHqCxHtN1DxJOgYtsHeX-9kw57xBrlhTaTkMu6uKxECquXV48iVE7vuFEnXfzCsKZ7IZOEFit1TqnM2uFM1kI1GMjNIkphgwdP2d0ShglBIqCEPJuKi2bYwxp-o2T4vhf5CoTp7phbB0sWj4w__"
+            alt=""></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 捷運篩選 -->
+  <section class="mrt">
+    <button class="mrt__arrow mrt__arrow--left"><img
+        src="https://s3-alpha-sig.figma.com/img/830b/e0c0/64eb57a930e108c6e6cabaa1b88c6f5e?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=R~ljU5ZemWO5nqPT8FhdSWqqRl6uDDZ2cAcyBrlJgJHnT~-p0ED1LnqRkBCps3N6e8SUSjAmNWvqmtw4kgQXzB7mt554qF5g2piN4LNXX4XwbJKWM0WDlTdtokG2ZwBwNj07gf8v~NxtnnXXdtYH9aiuoz-FF1rbBcuBfhP-NNfEm4m0vai3SuacdyXa4iUGfPdCCdJ2dsckdX2mPWSNx206u1LuxXzaVmMiugoMA4nuXjPupteixExwlcSm5IFqdMCVg6Pz4WfcnfO22-VlSJqxf2PIqPFrI1saGKXUoexxNY0vJo0JfxAJvniIrgbECWMZIfJfWQqQS9rLYo~d0w__"
+        alt=""></button>
+    <div class="mrt__list" id="mrtList"></div>
+    <button class="mrt__arrow mrt__arrow--right"><img
+        src="https://s3-alpha-sig.figma.com/img/e4fa/ff31/7f6ee79177fc772f6e7b0937f97f574b?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mKDzOmESNLVKmOyYsIDmAoG5AHmZY39rdYotDOgFe1sSGod3oqjE6lfqpO2KpIrMFFxOP0QXdBOtuey9kMtDE1ULUxejjd9fh304ZKPK9s4FgUJoW4e4yFKvUZUsG48k6soAfHzrCaIDbALPZACa8oxgWNmk~cUvlQGtfmy3sGDhB~t3Kew49eKgXd~1FcNsA7tCSUC7jtYZ0ohdA6hkxhN6vRKieED5bsHXbmZdQK3osTDGsQPVGinAaAmRxHcsSUQEyq9xoRrzdE1ITMOAOOg9s-UmuPSM3Ee3lnAuut7p8-F4HrGpxc6OVev6LoXMy~-c5yA11oUBYl1OhuzVFw__"
+        alt=""></button>
+  </section>
+
+  <!-- 景點列表 -->
+  <main class="attractions" id="attractions-container"></main>
+
+  <!-- 頁尾 -->
+  <footer class="footer">
+    <p class="footer__text">COPYRIGHT © 2024 台北一日遊</p>
+  </footer>
+  <script src="/static/script.js"></script>
+
 </body>
+
 </html>

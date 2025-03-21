@@ -2,6 +2,8 @@ from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from typing import Optional
 from mysql.connector import pooling
+from fastapi.staticfiles import StaticFiles
+
 
 app = FastAPI()
 
@@ -21,6 +23,7 @@ async def booking(request: Request):
 @app.get("/thankyou", include_in_schema=False)
 async def thankyou(request: Request):
     return FileResponse("./static/thankyou.html", media_type="text/html")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 建立 MySQL 連接池
 db_pool = pooling.MySQLConnectionPool(
