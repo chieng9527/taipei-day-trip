@@ -29,14 +29,15 @@ async function fetchAttractions(keyword = "") {
 function renderAttractions(attractions) {
   const container = document.getElementById("attractions-container");
   const fragment = document.createDocumentFragment();
-  attractions.forEach(({ name, images, mrt = "無捷運資訊", category = "未分類" }) => {
+  attractions.forEach(({ name, images, id, mrt = "無捷運資訊", category = "未分類" }) => {
     if (!name) return;
     const card = document.createElement("div");
     card.className = "attraction-card";
-    card.innerHTML = `<img src="${images[0]}" alt="${name}">
+    card.innerHTML = `<a href="/attraction/${id}">
+<img src="${images[0]}" alt="${name}">
   <h3>${name}</h3>
   <div>
-    <p>${mrt}</p>
+    <p class='attraction-mrt'>${mrt}</p>
     <p class='attraction-category'>${category}</p>
   </div>`;
     fragment.appendChild(card);
