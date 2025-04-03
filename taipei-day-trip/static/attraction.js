@@ -30,6 +30,10 @@ class Carousel {
     this.isAnimating = false;
     this.transitionDuration = 300;
     this.loadedImages = new Set();
+    this.observer = new IntersectionObserver(this.onImageVisible.bind(this), {
+      root: DOM.carousel.container,
+      threshold: 0.1
+    });
     this.bindEvents();
   }
 
@@ -41,29 +45,25 @@ class Carousel {
   async init(imageUrls) {
     this.images = imageUrls;
     this.render();
-    this.preloadImages();
+    this.lazyLoadImages();
   }
 
-  async preloadImages() {
-    const loadPromises = this.images.map((url, index) => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-          this.loadedImages.add(index);
-          const imgElement = document.querySelector(`.carousel__image[data-index="${index}"]`);
-          if (imgElement) {
-            imgElement.classList.remove("loading");
-            imgElement.src = url;
-          }
-          resolve();
-        };
-        img.onerror = reject;
-        img.src = url;
-      });
-    });
+  lazyLoadImages() {
+    const images = document.querySelectorAll(".carousel__image");
+    images.forEach(img => this.observer.observe(img));
+  }
 
-    // 等待所有圖片載入完成
-    await Promise.all(loadPromises).catch(console.error);
+  onImageVisible(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        if (!img.src) {
+          img.src = img.dataset.src;
+          img.onload = () => img.classList.remove("loading");
+        }
+        this.observer.unobserve(img);
+      }
+    });
   }
 
   render() {
@@ -72,8 +72,7 @@ class Carousel {
     this.renderDots();
 
     requestAnimationFrame(() => {
-      const images = document.querySelectorAll(".carousel__image");
-      images.forEach(img => {
+      document.querySelectorAll(".carousel__image").forEach(img => {
         img.style.transition = "transform 0.3s ease-in-out, opacity 0.3s ease-in-out";
       });
       this.updateCarousel();
@@ -82,16 +81,14 @@ class Carousel {
 
   renderImages() {
     const fragment = document.createDocumentFragment();
-
     this.images.forEach((src, index) => {
       const img = document.createElement("img");
-      img.src = src;
+      img.dataset.src = src;
       img.alt = `景點圖片 ${index + 1}`;
-      img.className = "carousel__image";
+      img.className = "carousel__image loading";
       img.dataset.index = index;
       img.style.transform = `translateX(${index === 0 ? 0 : 100}%)`;
       img.style.opacity = index === 0 ? "1" : "0";
-
       fragment.appendChild(img);
     });
 
@@ -101,7 +98,6 @@ class Carousel {
 
   renderDots() {
     const fragment = document.createDocumentFragment();
-
     this.images.forEach((_, index) => {
       const dot = document.createElement("span");
       dot.className = "carousel__dot";
@@ -115,18 +111,22 @@ class Carousel {
   }
 
   updateCarousel() {
-    const images = document.querySelectorAll(".carousel__image");
-    const dots = document.querySelectorAll(".carousel__dot");
-
-    images.forEach((img, index) => {
-      let offset = this.calculateOffset(index);
+    document.querySelectorAll(".carousel__image").forEach((img, index) => {
+      const offset = this.calculateOffset(index);
       img.style.transform = `translateX(${offset * 100}%)`;
       img.style.opacity = index === this.currentIndex ? "1" : "0";
     });
 
-    dots.forEach((dot, index) => {
+    document.querySelectorAll(".carousel__dot").forEach((dot, index) => {
       dot.classList.toggle("active", index === this.currentIndex);
     });
+
+    // 預載下一張圖片
+    const nextIndex = (this.currentIndex + 1) % this.images.length;
+    const nextImage = document.querySelector(`.carousel__image[data-index="${nextIndex}"]`);
+    if (nextImage && !nextImage.src) {
+      nextImage.src = nextImage.dataset.src;
+    }
   }
 
   calculateOffset(index) {
@@ -203,7 +203,9 @@ class AttractionPage {
       const data = await this.fetchAttractionData();
       this.renderAttractionDetails(data);
       await this.carousel.init(data.images);
-    } catch (error) { document.getElementById("attractionTitle").textContent = "載入失敗，請稍後再試"; }
+    } catch (error) {
+      DOM.attraction.title.textContent = "載入失敗，請稍後再試";
+    }
   }
 
   renderAttractionDetails(data) {

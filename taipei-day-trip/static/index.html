@@ -28,8 +28,7 @@
       <p class="hero__description">探索每個角落，體驗城市的深度旅遊行程</p>
       <div class="search">
         <input type="text" class="search__input" id="searchInput" placeholder="輸入景點名稱查詢">
-        <button class="search__button" id="searchBtn"><img
-            src="https://s3-alpha-sig.figma.com/img/2287/3bf8/d5750c31481dec07f7101a5fb69baa37?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=i7dS4ztAhzgIUxgTrhc2Qupg4~JpmWUHs9tT00QSV0W61klw8vLmRfVhB3Su3UYSh8xeBDteKSGEVdWqiBCs9Ogt~sG2qiJithMQfK0kHhfBOPXnisTgII~b197Jv8mj1IkTWPHvkj8CKOuaIrv~aabQd7hQRQENN73Qtr4OqOUH-ZVhLHrcceWSCt4W0J8nrwKcMSHqCxHtN1DxJOgYtsHeX-9kw57xBrlhTaTkMu6uKxECquXV48iVE7vuFEnXfzCsKZ7IZOEFit1TqnM2uFM1kI1GMjNIkphgwdP2d0ShglBIqCEPJuKi2bYwxp-o2T4vhf5CoTp7phbB0sWj4w__"
+        <button class="search__button" id="searchBtn"><img src="/static/images/icon_search.png" class="icon__search"
             alt=""></button>
       </div>
     </div>
@@ -37,13 +36,9 @@
 
   <!-- 捷運篩選 -->
   <section class="mrt">
-    <button class="mrt__arrow mrt__arrow--left"><img
-        src="https://s3-alpha-sig.figma.com/img/830b/e0c0/64eb57a930e108c6e6cabaa1b88c6f5e?Expires=1743379200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=R~ljU5ZemWO5nqPT8FhdSWqqRl6uDDZ2cAcyBrlJgJHnT~-p0ED1LnqRkBCps3N6e8SUSjAmNWvqmtw4kgQXzB7mt554qF5g2piN4LNXX4XwbJKWM0WDlTdtokG2ZwBwNj07gf8v~NxtnnXXdtYH9aiuoz-FF1rbBcuBfhP-NNfEm4m0vai3SuacdyXa4iUGfPdCCdJ2dsckdX2mPWSNx206u1LuxXzaVmMiugoMA4nuXjPupteixExwlcSm5IFqdMCVg6Pz4WfcnfO22-VlSJqxf2PIqPFrI1saGKXUoexxNY0vJo0JfxAJvniIrgbECWMZIfJfWQqQS9rLYo~d0w__"
-        alt=""></button>
+    <button class="mrt__arrow mrt__arrow--left"><img src="/static/images/Default_left.png" alt=""></button>
     <div class="mrt__list" id="mrtList"></div>
-    <button class="mrt__arrow mrt__arrow--right"><img
-        src="https://s3-alpha-sig.figma.com/img/11a9/3502/af6bd68153a1414f61e906696695541a?Expires=1743984000&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=hxbEutAUL7T~xH8RgI-ag~Qtn9c8vIonOe2SD0IZCs~usFUyQ6IMwnJ5KI9CXqfimaAXrVWJLJMOkSmGlUFzzgzflalpEyy0-kHsjjrJN9N1P9LTLboUnmR1QpcscLf40CrrkpqY4xgU-H5DGf5b9BSUYNO8UI5Ft9G45W2s-~Y4MP-R~flJfmsiHsL3BCeEASIyi2xX3tB6aTRcAmQUtqRkbZ8hyI9zMN7DjH8QUX6KXIDGcElOselELnOipy49qYKgCw32S7gu30hDBcvb1c6Rt5Ao6lMeHLqK-4rKZGJ6qhFbEbRlN8DlRPloS-lz2G7mS8~F04qqkou5-SQXEg__"
-        alt=""></button>
+    <button class="mrt__arrow mrt__arrow--right"><img src="/static/images/Default_right.png" alt=""></button>
   </section>
 
   <!-- 景點列表 -->
@@ -53,7 +48,44 @@
   <footer class="footer">
     <p class="footer__text">COPYRIGHT © 2024 台北一日遊</p>
   </footer>
+  <div class="modal" id="authModal">
+    <div class="modal__content">
+      <button class="modal__close" id="closeModal"></button>
+
+      <!-- 登入表單 -->
+      <form class="auth-form" id="loginForm">
+        <h2 class="auth-form__title">登入會員帳號</h2>
+        <div class="auth-form__group">
+          <input type="email" id="loginEmail" required placeholder="輸入電子信箱">
+        </div>
+        <div class="auth-form__group">
+          <input type="password" id="loginPassword" required placeholder="輸入密碼">
+        </div>
+        <button type="submit" class="auth-form__submit">登入帳戶</button>
+        <div class="auth-form__error" id="loginError"></div>
+        <p class="auth-form__switch">還沒有帳戶？<a href="#" id="showRegister">點此註冊</a></p>
+      </form>
+
+      <!-- 註冊表單 -->
+      <form class="auth-form" id="registerForm" style="display: none;">
+        <h2 class="auth-form__title">註冊會員帳號</h2>
+        <div class="auth-form__group">
+          <input type="text" id="registerName" required placeholder="輸入姓名">
+        </div>
+        <div class="auth-form__group">
+          <input type="email" id="registerEmail" required placeholder="輸入電子郵件">
+        </div>
+        <div class="auth-form__group">
+          <input type="password" id="registerPassword" required placeholder="輸入密碼">
+        </div>
+        <button type="submit" class="auth-form__submit">註冊新帳戶</button>
+        <div class="auth-form__error" id="registerError"></div>
+        <p class="auth-form__switch">已經有帳戶了？<a href="#" id="showLogin">點此登入</a></p>
+      </form>
+    </div>
+  </div>
   <script src="/static/script.js"></script>
+  <script src="/static/auth.js"></script>
 
 </body>
 
