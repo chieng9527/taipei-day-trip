@@ -173,6 +173,8 @@ input[type="date"] {
   border: none;
   cursor: pointer;
   font-size: 16px;
+  background-color: #fff;
+  color: #000;
 }
 
 input[type="radio"] {
@@ -182,6 +184,7 @@ input[type="radio"] {
   background-color: #fff;
   border-radius: 50%;
   appearance: none;
+  vertical-align: text-top;
   cursor: pointer;
 }
 
@@ -190,7 +193,7 @@ input[type="radio"]:checked {
 }
 
 /* === 按鈕樣式 === */
-button[type="submit"] {
+#bookingForm button {
   width: 154px;
   height: 36px;
   background-color: #448899;
@@ -212,8 +215,8 @@ button[type="submit"] {
 }
 
 #attractionDescription {
-  display: flex;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
   text-align: justify;
   padding: 0 15px;
 }

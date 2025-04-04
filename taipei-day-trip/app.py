@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from typing import Optional
-from mysql.connector import pooling
 from fastapi.staticfiles import StaticFiles
-
+from database import get_db_connection
+from users import router as user_router
 
 app = FastAPI()
 
@@ -23,20 +23,11 @@ async def booking(request: Request):
 @app.get("/thankyou", include_in_schema=False)
 async def thankyou(request: Request):
     return FileResponse("./static/thankyou.html", media_type="text/html")
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 建立 MySQL 連接池
-db_pool = pooling.MySQLConnectionPool(
-    pool_name="my_pool",
-    pool_size=5,
-    host="localhost",
-    user="wehelp_123",
-    password="wehelp_456",
-    database="taipei_trip"
-)
-
-def get_db_connection():
-    return db_pool.get_connection()
+# 加入使用者路由
+app.include_router(user_router)
 
 # API 1: 取得所有景點（支援分頁 & 關鍵字搜尋）
 @app.get("/api/attractions")
@@ -161,7 +152,8 @@ def get_mrts():
         return {"data": results}
     
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
+        return JSONResponse(
+            status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
     
     finally:
         if db.is_connected():
