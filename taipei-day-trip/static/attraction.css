@@ -1,13 +1,4 @@
 /* === 全域樣式 === */
-hr {
-  border: none;
-  max-width: 1200px;
-  width: 97%;
-  height: 1px;
-  background: #e8e8e8;
-  margin: 20px auto;
-}
-
 div>label {
   font-weight: 700;
 }
@@ -152,7 +143,6 @@ div .half-day {
   margin-top: 0px;
 }
 
-
 #bookingForm>div:nth-child(1) {
   display: flex;
   align-items: center;
@@ -235,11 +225,6 @@ aside {
 
 /* === RWD: 768px === */
 @media (max-width: 768px) {
-  .nav__container {
-    padding: 10px 5px;
-  }
-
-
   .attraction {
     flex-direction: column;
     align-items: center;
@@ -274,7 +259,6 @@ aside {
   #attractionCategory {
     padding-left: 10px;
   }
-
 
   hr {
     margin: 40px auto;
@@ -318,9 +302,7 @@ aside {
     padding-bottom: 5px;
   }
 
-
   button[type="submit"] {
     margin: 0;
   }
-
 }

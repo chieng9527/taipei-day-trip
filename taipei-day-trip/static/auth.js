@@ -2,14 +2,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // 獲取元素
     const authModal = document.getElementById('authModal');
     const loginLink = document.querySelector('.nav__item:last-child a');
-    const openAuthModal = document.getElementById("openAuthModal");
+    const navBooking = document.getElementById('navBooking');
+    const navAuth = document.getElementById("navAuth");
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const closeModal = document.getElementById('closeModal');
     const showRegister = document.getElementById('showRegister');
     const showLogin = document.getElementById('showLogin');
 
-
+    // 初始化模態框狀態
     authModal.style.display = 'none';
     authModal.classList.remove('show');
     loginLink.textContent = '載入中...';
@@ -62,9 +63,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     'Authorization': `Bearer ${token}`
                 }
             });
+
             const data = await response.json();
 
-            if (data.data === null) {
+            if (!response.ok || !data || data.data === null) {
                 localStorage.removeItem('token');
                 updateNavigation(false);
             } else {
@@ -72,19 +74,30 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (error) {
             console.error('檢查登入狀態時發生錯誤:', error);
+            localStorage.removeItem('token');
             updateNavigation(false);
         }
     }
 
-    // 更新導航欄顯示
+    // 更新導航欄顯示 
     function updateNavigation(isLoggedIn, userData = null) {
         if (isLoggedIn && userData) {
-            loginLink.textContent = '登出系統';
-            loginLink.onclick = handleLogout;
-            loginLink.href = '#';
+            // 登入狀態
+            navAuth.textContent = '登出系統';
+            navAuth.onclick = handleLogout;
+
+            // 預定行程按鈕行為
+            navBooking.onclick = function (e) {
+                e.preventDefault();
+                window.location.href = '/booking';
+            };
         } else {
-            loginLink.textContent = '登入/註冊';
-            loginLink.onclick = function (e) {
+            // 未登入狀態
+            navAuth.textContent = '登入/註冊';
+            navAuth.onclick = handleLoginClick;
+
+            // 預定行程按鈕行為
+            navBooking.onclick = function (e) {
                 e.preventDefault();
                 authModal.style.display = 'block';
                 setTimeout(() => {
@@ -92,24 +105,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 10);
                 resetForms();
             };
-            loginLink.href = '#';
         }
     }
 
     // 處理登出
     function handleLogout(e) {
         e.preventDefault();
-
         document.body.classList.add('logging-out');
-
         authModal.setAttribute('aria-hidden', 'true');
         authModal.style.display = 'none';
-
         localStorage.removeItem('token');
-
         setTimeout(() => {
             location.reload();
         }, 50);
+    }
+
+    // 處理登入點擊
+    function handleLoginClick(e) {
+        e.preventDefault();
+        authModal.style.display = 'block';
+        setTimeout(() => {
+            authModal.classList.add('show');
+        }, 10);
+        resetForms();
     }
 
     // 處理註冊
@@ -185,13 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 事件監聽器
-    openAuthModal?.addEventListener("click", function (e) {
-        e.preventDefault();
-        authModal.style.display = 'block';
-        setTimeout(() => {
-            authModal.classList.add('show');
-        }, 10);
-    });
+    navAuth?.addEventListener("click", handleLoginClick);
 
     closeModal?.addEventListener('click', function () {
         authModal.classList.remove('show');

@@ -218,7 +218,96 @@ class AttractionPage {
     DOM.attraction.transport.textContent = transport;
   }
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const bookingForm = document.getElementById("bookingForm");
+  const authModal = document.getElementById("authModal");
+  const navBooking = document.getElementById("navBooking");
 
-// 初始化頁面
-const attractionPage = new AttractionPage();
-attractionPage.init();
+  // 導覽列點擊預定行程
+  navBooking.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const isLoggedIn = await checkUserLoggedIn();
+    if (isLoggedIn) {
+      // 檢查是否已預約行程
+      try {
+        const res = await fetch("/api/booking", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+        const result = await res.json();
+        // 無預定資料也一樣導向 booking 頁面
+        window.location.href = "/booking";
+      } catch (err) {
+        console.error("取得預定狀態失敗", err);
+        alert("無法確認預定狀態，請稍後再試");
+      }
+    } else {
+      showAuthModal();
+    }
+  });
+
+  // 預約表單送出
+  bookingForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const isLoggedIn = await checkUserLoggedIn();
+    if (!isLoggedIn) {
+      showAuthModal();
+      return;
+    }
+
+    // 蒐集表單資料
+    const date = document.getElementById("date").value;
+    const time = document.querySelector("input[name='time']:checked").value;
+    const price = time === "morning" ? 2000 : 2500;
+    const attractionId = window.location.pathname.split("/").pop();
+
+    if (!date) {
+      alert("請選擇日期");
+      return;
+    }
+
+    const res = await fetch("/api/booking", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({
+        attractionId: parseInt(attractionId),
+        date,
+        time,
+        price
+      })
+    });
+
+    const result = await res.json();
+    if (res.ok && result.ok) {
+      window.location.href = "/booking";
+    } else {
+      alert(result.message || "預約失敗");
+    }
+  });
+
+  function showAuthModal() {
+    authModal.style.display = "block";
+    setTimeout(() => {
+      authModal.classList.add("show");
+    }, 10);
+  }
+
+  async function checkUserLoggedIn() {
+    const res = await fetch("/api/user/auth", {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+    const result = await res.json();
+    return result.data !== null;
+  }
+
+  // 初始化頁面
+  const attractionPage = new AttractionPage();
+  attractionPage.init();
+});
