@@ -1,0 +1,226 @@
+html,
+body {
+  height: 100%;
+}
+
+body.hide {
+  display: none;
+}
+
+/* === BASE === */
+.booking__container {
+  margin: 94px auto 60px;
+  max-width: 1000px;
+  padding: 0 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.booking__container--visible {
+  opacity: 1;
+}
+
+.booking__greeting {
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+
+/* === ITEM === */
+.booking__item {
+  display: flex;
+  height: 200px;
+  max-width: 980px;
+  gap: 30px;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.booking__image {
+  height: 200px;
+  width: 250px;
+  object-fit: cover;
+}
+
+.booking__item-info {
+  text-align: left;
+}
+
+.booking__item-title {
+  margin-top: 5px;
+  color: #448899;
+  font-weight: 700;
+  width: 250px;
+}
+
+.booking__item-details {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  gap: 12px;
+}
+
+#deleteBooking {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  right: 10px;
+  background: url("./images/icon_delete.png") no-repeat center/cover;
+  border: none;
+  cursor: pointer;
+}
+
+/* === CONTACT === */
+.booking__contact {
+  height: 227px;
+  margin-bottom: 40px;
+}
+
+.booking__card {
+  padding: 0 10px;
+}
+
+/* === PAYMENT === */
+.booking__payment {
+  margin-bottom: 40px;
+}
+
+.booking__form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* === TOTAL === */
+.booking__total {
+  font-weight: 700;
+  text-align: right;
+  padding-right: 10px;
+}
+
+/* === BUTTON === */
+.booking__pay-btn {
+  height: 36px;
+  width: 173px;
+  font-size: 19px;
+  color: #fff;
+  background-color: #448899;
+  border: none;
+  border-radius: 5px;
+  display: block;
+  margin-left: auto;
+  margin-right: 10px;
+  margin-top: 22px;
+  cursor: pointer;
+}
+
+/* === FOOTER === */
+.footer {
+  display: none;
+}
+
+.footer--fullscreen {
+  height: 100%;
+}
+
+/* === RWD: 768px === */
+@media (max-width: 768px) {
+  .nav__container {
+    padding: 10px 5px;
+  }
+}
+
+/* === RWD: 630px === */
+@media (max-width: 630px) {
+  .booking__greeting {
+    padding-left: 10px;
+  }
+
+  .booking__item {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .booking__image {
+    height: 300px;
+    width: 100%;
+  }
+
+  .booking__item-title {
+    width: auto;
+  }
+
+  #deleteBooking {
+    bottom: -25px;
+  }
+
+  hr {
+    width: 97%;
+  }
+}
+
+/* === RWD: 480px === */
+@media (max-width: 480px) {
+  .booking__greeting {
+    padding: 0;
+  }
+
+  .nav__menu {
+    gap: 10px;
+  }
+
+  .booking__container {
+    padding: 0;
+  }
+
+  .booking__item {
+    padding: 0;
+  }
+
+  .booking__image {
+    height: 200px;
+  }
+
+  .booking__contact {
+    padding: 0;
+  }
+
+  .booking__payment {
+    padding: 0;
+  }
+
+  .booking__total {
+    padding-right: 5px;
+  }
+
+  .booking__pay-btn {
+    margin-right: 5px;
+  }
+
+  #deleteBooking {
+    right: 5px;
+  }
+}
+
+hr {
+  margin-bottom: 40px;
+  width: 100%;
+}
+
+h3 {
+  font-size: 19px;
+}
+
+.booking__note {
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.booking__input {
+  min-width: 178px;
+  height: 16px;
+  font-size: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 5px;
+  padding: 10px;
+}

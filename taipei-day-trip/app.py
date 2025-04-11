@@ -1,11 +1,16 @@
 from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
+from config import settings
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from database import get_db_connection
 from users import router as user_router
+from booking import router as booking_router
 
 app = FastAPI()
+app.include_router(booking_router)
+app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
 # 靜態頁面路由
 @app.get("/", include_in_schema=False)

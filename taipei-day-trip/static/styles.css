@@ -1,16 +1,32 @@
 /* === 全域設定 === */
+html,
 body {
-  font-family: "Noto Sans TC", sans-serif;
   margin: 0;
   padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: "Noto Sans TC", sans-serif;
   color: #666;
   font-size: 16px;
   line-height: 1.3;
+  position: relative;
+  min-height: 100vh;
 }
 
 /* 禁用登出時的窗口過渡 */
 body.logging-out .modal {
   transition: none !important;
+}
+
+hr {
+  border: none;
+  max-width: 1200px;
+  width: 97%;
+  height: 1px;
+  background: #e8e8e8;
+  margin: 20px auto;
 }
 
 
@@ -78,6 +94,7 @@ body.logging-out .modal {
   text-align: center;
   line-height: 104px;
   font-weight: 700;
+  margin-top: auto;
 }
 
 .modal {
@@ -266,8 +283,29 @@ body.logging-out .modal {
   background-color: #4c9baf;
 }
 
+@media (max-width: 768px) {
+  .nav__container {
+    padding: 10px 5px;
+  }
+}
+
 @media (max-width: 480px) {
+
+  .nav__menu {
+    gap: 10px;
+  }
+
+  .nav__container {
+    padding: 10px 5px;
+  }
+
   .modal__content {
     max-width: 310px;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav__menu {
+    gap: 10px;
   }
 }

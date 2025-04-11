@@ -33,7 +33,7 @@ def create_access_token(user_id: int) -> str:
     return jwt.encode(token_data, settings.secret_key, algorithm=settings.algorithm)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8").decode())
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 @router.post("/api/user")
 def register_user(user: UserSignup):
@@ -106,7 +106,7 @@ def login_user(user: UserLogin):
         cursor = db.cursor(dictionary=True)
 
         select_query = """
-            SELECT id, password 
+            SELECT id, name, email, password 
             FROM users 
             WHERE email = %s
         """

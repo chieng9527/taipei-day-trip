@@ -226,11 +226,6 @@
 
 @media (max-width: 360px) {
 
-
-  .nav__menu {
-    gap: 10px;
-  }
-
   .attraction-card {
     height: 278px;
   }
