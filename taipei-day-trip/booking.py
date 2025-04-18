@@ -38,6 +38,8 @@ def get_user_id_from_token(token: str) -> int:
 # API 端點
 @router.get("/api/booking")
 async def get_booking(token: str = Depends(oauth2_scheme)):
+    db = None
+    cursor = None
     payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     user_id = payload["id"]
     
@@ -93,12 +95,21 @@ async def get_booking(token: str = Depends(oauth2_scheme)):
     except Exception as e:
         raise HTTPException(status_code=500, detail="伺服器內部錯誤")
     finally:
-        if 'db' in locals() and db.is_connected():
-            cursor.close()
-            db.close()
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if db:
+            try:
+                db.close()
+            except:
+                pass
 
 @router.post("/api/booking")
 async def create_booking(booking_data: BookingCreate, token: str = Depends(oauth2_scheme)):
+    db = None
+    cursor = None
     user_id = get_user_id_from_token(token)
     
     # 驗證時間和價格是否匹配
@@ -142,12 +153,21 @@ async def create_booking(booking_data: BookingCreate, token: str = Depends(oauth
         db.rollback()
         raise HTTPException(status_code=500, detail="伺服器內部錯誤")
     finally:
-        if 'db' in locals() and db.is_connected():
-            cursor.close()
-            db.close()
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if db:
+            try:
+                db.close()
+            except:
+                pass
 
 @router.delete("/api/booking")
 async def delete_booking(token: str = Depends(oauth2_scheme)):
+    db = None
+    cursor = None
     user_id = get_user_id_from_token(token)
     
     try:
@@ -166,6 +186,13 @@ async def delete_booking(token: str = Depends(oauth2_scheme)):
         db.rollback()
         raise HTTPException(status_code=500, detail="伺服器內部錯誤")
     finally:
-        if 'db' in locals() and db.is_connected():
-            cursor.close()
-            db.close()
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+        if db:
+            try:
+                db.close()
+            except:
+                pass

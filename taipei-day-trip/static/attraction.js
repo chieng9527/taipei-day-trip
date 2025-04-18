@@ -306,8 +306,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const result = await res.json();
     return result.data !== null;
   }
+  // 設定預約按鈕過渡動畫效果
+  function setupBookingLoadingAnimation() {
+    const bookingForm = document.getElementById("bookingForm");
+    const overlay = document.createElement("div");
+    overlay.className = "loading-overlay";
+    overlay.innerHTML = '<div class="loading-spinner"></div>';
+
+    bookingForm?.addEventListener("submit", () => {
+      document.body.appendChild(overlay);
+      setTimeout(() => {
+        overlay.remove();
+      }, 10000);
+    });
+  }
 
   // 初始化頁面
   const attractionPage = new AttractionPage();
   attractionPage.init();
+  setupBookingLoadingAnimation();
 });

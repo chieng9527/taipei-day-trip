@@ -19,7 +19,7 @@ class UserSignup(BaseModel):
 
 
     class Config:
-        min_anystr_length = 8
+        str_min_length = 8
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -37,6 +37,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 @router.post("/api/user")
 def register_user(user: UserSignup):
+    db = None
+    cursor = None
     try:
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
@@ -67,15 +69,20 @@ def register_user(user: UserSignup):
         )
     
     finally:
-        if 'db' in locals() and db.is_connected():
+        if cursor:
             cursor.close()
+        if db:
             db.close()
 
 @router.get("/api/user/auth")
 def get_user_auth(token: str = Depends(oauth2_scheme)):
+    db = None
+    cursor = None
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         user_id = payload.get("id")
+        if user_id is None:
+            return {"data": None}
 
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
@@ -95,12 +102,15 @@ def get_user_auth(token: str = Depends(oauth2_scheme)):
     except jwt.InvalidTokenError:
         return {"data": None}
     finally:
-        if 'db' in locals() and db.is_connected():
+        if cursor:
             cursor.close()
+        if db:
             db.close()
 
 @router.put("/api/user/auth")
 def login_user(user: UserLogin):
+    db = None
+    cursor = None
     try:
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
@@ -129,6 +139,16 @@ def login_user(user: UserLogin):
         )
     
     finally:
-        if 'db' in locals() and db.is_connected():
+        if cursor:
             cursor.close()
+        if db:
             db.close()
+
+def decode_jwt_token(token: str):
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
