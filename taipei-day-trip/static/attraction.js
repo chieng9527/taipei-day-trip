@@ -226,8 +226,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // 導覽列點擊預定行程
   navBooking.addEventListener("click", async (e) => {
     e.preventDefault();
+    const start = performance.now();
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showAuthModal();
+      return;
+    }
     const isLoggedIn = await checkUserLoggedIn();
-    if (isLoggedIn) {
+    if (!isLoggedIn) {
+      const elapsed = performance.now() - start;
+      if (elapsed > 500) {
+        console.warn("Login check took too long:", elapsed, "ms");
+      }
+      showAuthModal();
+    } else {
       // 檢查是否已預約行程
       try {
         const res = await fetch("/api/booking", {
@@ -242,8 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("取得預定狀態失敗", err);
         alert("無法確認預定狀態，請稍後再試");
       }
-    } else {
-      showAuthModal();
     }
   });
 
@@ -297,14 +307,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 10);
   }
 
-  async function checkUserLoggedIn() {
-    const res = await fetch("/api/user/auth", {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      }
-    });
-    const result = await res.json();
-    return result.data !== null;
+  let cachedLoginStatus = null;
+
+  async function checkUserLoggedIn(force = false) {
+    if (!force && cachedLoginStatus !== null) return cachedLoginStatus;
+
+    try {
+      const res = await fetch("/api/user/auth", {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      const result = await res.json();
+      cachedLoginStatus = result.data !== null;
+      return cachedLoginStatus;
+    } catch (err) {
+      console.error("登入狀態確認失敗", err);
+      return false;
+    }
   }
   // 設定預約按鈕過渡動畫效果
   function setupBookingLoadingAnimation() {
@@ -313,7 +333,12 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.className = "loading-overlay";
     overlay.innerHTML = '<div class="loading-spinner"></div>';
 
-    bookingForm?.addEventListener("submit", () => {
+    bookingForm?.addEventListener("submit", async (e) => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const isLoggedIn = await checkUserLoggedIn();
+      if (!isLoggedIn) return;
+
       document.body.appendChild(overlay);
       setTimeout(() => {
         overlay.remove();

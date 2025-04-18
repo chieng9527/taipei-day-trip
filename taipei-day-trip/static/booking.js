@@ -248,7 +248,7 @@ class BookingPage {
         headers: { Authorization: `Bearer ${this.token}` }
       });
       if (!res.ok) throw new Error("刪除失敗");
-      location.reload();
+      this.renderEmpty(this.userName);
     } catch (error) {
       alert("刪除失敗，請稍後再試");
     } finally {

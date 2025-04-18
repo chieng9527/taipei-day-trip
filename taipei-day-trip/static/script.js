@@ -1,9 +1,13 @@
 const apiUrl = "/api/attractions";
 const mrtUrl = "/api/mrts";
 let page = 0, nextPage = null, isLoading = false;
+let lastKeyword = "";
 
 // 共用搜尋處理函數
 function handleSearch(keyword) {
+  keyword = keyword.trim();
+  if (keyword === lastKeyword) return;  // 避免重複請求
+  lastKeyword = keyword;
   page = 0;
   nextPage = null;
   fetchAttractions(keyword);
@@ -71,12 +75,29 @@ function observeLastCard() {
   if (lastCard) observer.observe(lastCard);
 }
 
+// debounce 函數定義
+function debounce(func, delay) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
 // 搜尋欄設置
 function setupSearch() {
   const searchInput = document.getElementById("searchInput");
-  document.getElementById("searchBtn").addEventListener("click", () => handleSearch(searchInput.value));
+  const debouncedSearch = debounce(() => handleSearch(searchInput.value), 300);
+
+  document.getElementById("searchBtn").addEventListener("click", () => {
+    handleSearch(searchInput.value);
+  });
+
   searchInput.addEventListener("keydown", event => {
-    if (event.key === "Enter") handleSearch(searchInput.value);
+    if (event.key === "Enter") {
+      event.preventDefault();
+      debouncedSearch();
+    }
   });
 }
 
@@ -101,7 +122,10 @@ function renderMRTStations(stations) {
     const stationElement = document.createElement("div");
     stationElement.className = "mrt-item";
     stationElement.textContent = station;
-    stationElement.addEventListener("click", () => handleSearch(station));
+    stationElement.addEventListener("click", () => {
+      if (station === lastKeyword) return;
+      handleSearch(station);
+    });
     fragment.appendChild(stationElement);
   });
 
@@ -150,19 +174,24 @@ async function init() {
   await Promise.all([fetchAttractions(), fetchMRTStations()]);
 }
 
-setupSearch();
-setupMRTScroll();
-init();
-
 window.addEventListener("DOMContentLoaded", () => {
   const body = document.querySelector("body");
   const overlay = document.getElementById("loadingOverlay");
+
+  // 顯示 overlay 並隱藏內容
+  if (overlay) overlay.style.display = "flex";
+  body.classList.add("hide");
+
+  // 等待初始化完成後再移除遮罩與顯示內容
   init()
-    .catch((err) => console.error("初始化失敗", err))
+    .catch(err => console.error("初始化失敗", err))
     .finally(() => {
-      if (overlay) overlay.style.display = "none";
-      if (body?.classList.contains("hide")) body.classList.remove("hide");
+      requestAnimationFrame(() => {
+        if (overlay) overlay.style.display = "none";
+        body.classList.remove("hide");
+      });
     });
+
   setupSearch();
   setupMRTScroll();
 });

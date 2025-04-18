@@ -17,9 +17,8 @@ class UserSignup(BaseModel):
     email: EmailStr  
     password: str
 
-
     class Config:
-        str_min_length = 8
+        min_anystr_length = 1
 
 class UserLogin(BaseModel):
     email: EmailStr

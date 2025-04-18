@@ -14,6 +14,15 @@ document.addEventListener('DOMContentLoaded', function () {
     authModal.style.display = 'none';
     authModal.classList.remove('show');
     loginLink.textContent = '載入中...';
+    // 預設掛上 navBooking 的點擊行為（未登入時）
+    navBooking.onclick = function (e) {
+        e.preventDefault();
+        authModal.style.display = 'block';
+        setTimeout(() => {
+            authModal.classList.add('show');
+        }, 10);
+        resetForms();
+    };
 
     // 錯誤訊息處理
     function showError(elementId, message, isSuccess = false) {
@@ -113,16 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // 未登入狀態
             navAuth.textContent = '登入/註冊';
             navAuth.onclick = handleLoginClick;
-
-            // 預定行程按鈕行為
-            navBooking.onclick = function (e) {
-                e.preventDefault();
-                authModal.style.display = 'block';
-                setTimeout(() => {
-                    authModal.classList.add('show');
-                }, 10);
-                resetForms();
-            };
         }
     }
 
@@ -148,6 +147,19 @@ document.addEventListener('DOMContentLoaded', function () {
         resetForms();
     }
 
+    // 前端註冊欄位驗證
+    function validateRegisterInput(name, password) {
+        if (name.length < 8) {
+            showError('registerError', '姓名需至少 8 個字元');
+            return false;
+        }
+        if (password.length < 8) {
+            showError('registerError', '密碼需至少 8 個字元');
+            return false;
+        }
+        return true;
+    }
+
     // 處理註冊
     registerForm.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -157,6 +169,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const registerButton = e.target.querySelector('button[type="submit"]');
         registerButton.disabled = true;
+
+        if (!validateRegisterInput(name, password)) {
+            registerButton.disabled = false;
+            return;
+        }
 
         try {
             const response = await fetch('/api/user', {
