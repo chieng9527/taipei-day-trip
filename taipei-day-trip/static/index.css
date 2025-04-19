@@ -1,3 +1,8 @@
+body.hide {
+  visibility: hidden;
+  opacity: 0;
+}
+
 /* === 主視覺區 === */
 .hero {
   background: url("./images/welcome.png") no-repeat center/cover;
@@ -69,6 +74,7 @@
 }
 
 .mrt__arrow {
+  display: flex;
   background: none;
   border: none;
   cursor: pointer;
@@ -76,6 +82,8 @@
 
 .mrt__arrow img {
   width: 32px;
+  height: 32px;
+  margin: auto;
   opacity: 50%;
 }
 

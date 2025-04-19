@@ -7,10 +7,15 @@ from fastapi.staticfiles import StaticFiles
 from database import get_db_connection
 from users import router as user_router
 from booking import router as booking_router
+from order import router as order_router
 
 app = FastAPI()
-app.include_router(booking_router)
+
+# 註冊中介層與路由
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
+app.include_router(user_router)
+app.include_router(booking_router)
+app.include_router(order_router)
 
 # 靜態頁面路由
 @app.get("/", include_in_schema=False)
@@ -29,22 +34,21 @@ async def booking(request: Request):
 async def thankyou(request: Request):
     return FileResponse("./static/thankyou.html", media_type="text/html")
 
+# 註冊靜態目錄
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 加入使用者路由
-app.include_router(user_router)
 
-# API 1: 取得所有景點（支援分頁 & 關鍵字搜尋）
+# API 1: 取得所有景點（支援分頁與關鍵字搜尋）
 @app.get("/api/attractions")
 def get_attractions(page: int = Query(0, ge=0), keyword: Optional[str] = None):
     try:
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
 
-        limit = 12  # 每頁 12 筆
-        offset = page * limit  # 計算起始位置
+        limit = 12
+        offset = page * limit
 
-        # 計算符合關鍵字搜索條件的總結果數
+        # 計算總數
         if keyword and keyword.strip():
             count_query = """
                 SELECT COUNT(*) AS total
@@ -54,12 +58,11 @@ def get_attractions(page: int = Query(0, ge=0), keyword: Optional[str] = None):
             """
             cursor.execute(count_query, (f"%{keyword}%", f"%{keyword}%"))
         else:
-            count_query = "SELECT COUNT(*) AS total FROM attractions"
-            cursor.execute(count_query)
+            cursor.execute("SELECT COUNT(*) AS total FROM attractions")
 
         total_count = cursor.fetchone()["total"]
 
-        # 執行分頁查詢
+        # 查詢景點資料
         if keyword and keyword.strip():
             query = """
                 SELECT a.id, a.name, a.category, a.description, a.address, 
@@ -90,18 +93,17 @@ def get_attractions(page: int = Query(0, ge=0), keyword: Optional[str] = None):
         for attraction in results:
             attraction["images"] = attraction["images"].split(",") if attraction["images"] else []
 
-        # 根據總結果數判斷 nextPage
         next_page = page + 1 if offset + limit < total_count else None
-
         return {"nextPage": next_page, "data": results}
-    
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
-    
+
     finally:
-        if db.is_connected():
+        if "db" in locals() and db.is_connected():
             cursor.close()
             db.close()
+
 
 # API 2: 取得單一景點資訊
 @app.get("/api/attraction/{attractionId}")
@@ -128,16 +130,17 @@ def get_attraction(attractionId: int):
 
         attraction["images"] = attraction["images"].split(",") if attraction["images"] else []
         return {"data": attraction}
-    
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
-    
+
     finally:
-        if db.is_connected():
+        if "db" in locals() and db.is_connected():
             cursor.close()
             db.close()
 
-# API 3: 取得所有捷運站名稱，按照週邊景點數量排序
+
+# API 3: 取得所有捷運站名稱（依據景點數排序）
 @app.get("/api/mrts")
 def get_mrts():
     try:
@@ -155,12 +158,11 @@ def get_mrts():
         results = [row["name"] for row in cursor.fetchall()]
 
         return {"data": results}
-    
+
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
-    
+        return JSONResponse(status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
+
     finally:
-        if db.is_connected():
+        if "db" in locals() and db.is_connected():
             cursor.close()
             db.close()

@@ -14,6 +14,15 @@ document.addEventListener('DOMContentLoaded', function () {
     authModal.style.display = 'none';
     authModal.classList.remove('show');
     loginLink.textContent = '載入中...';
+    // 預設掛上 navBooking 的點擊行為（未登入時）
+    navBooking.onclick = function (e) {
+        e.preventDefault();
+        authModal.style.display = 'block';
+        setTimeout(() => {
+            authModal.classList.add('show');
+        }, 10);
+        resetForms();
+    };
 
     // 錯誤訊息處理
     function showError(elementId, message, isSuccess = false) {
@@ -49,6 +58,21 @@ document.addEventListener('DOMContentLoaded', function () {
         registerForm.style.display = 'none';
     }
 
+    // 獲取登入狀態
+    async function fetchLoginStatus(token) {
+        const response = await fetch('/api/user/auth', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("登入狀態 API 回傳錯誤");
+        }
+
+        return await response.json();
+    }
+
     // 檢查登入狀態
     async function checkLoginStatus() {
         try {
@@ -58,15 +82,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const response = await fetch('/api/user/auth', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data || data.data === null) {
+            const data = await fetchLoginStatus(token);
+            if (!data || data.data === null) {
                 localStorage.removeItem('token');
                 updateNavigation(false);
             } else {
@@ -76,6 +93,16 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('檢查登入狀態時發生錯誤:', error);
             localStorage.removeItem('token');
             updateNavigation(false);
+        }
+    }
+
+    // 重定向未登入的 thankyou 頁面
+    function redirectIfNotLoggedInOnThankyou() {
+        if (window.location.pathname.startsWith("/thankyou")) {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "/";
+            }
         }
     }
 
@@ -95,16 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // 未登入狀態
             navAuth.textContent = '登入/註冊';
             navAuth.onclick = handleLoginClick;
-
-            // 預定行程按鈕行為
-            navBooking.onclick = function (e) {
-                e.preventDefault();
-                authModal.style.display = 'block';
-                setTimeout(() => {
-                    authModal.classList.add('show');
-                }, 10);
-                resetForms();
-            };
         }
     }
 
@@ -130,12 +147,33 @@ document.addEventListener('DOMContentLoaded', function () {
         resetForms();
     }
 
+    // 前端註冊欄位驗證
+    function validateRegisterInput(name, password) {
+        if (name.length < 8) {
+            showError('registerError', '姓名需至少 8 個字元');
+            return false;
+        }
+        if (password.length < 8) {
+            showError('registerError', '密碼需至少 8 個字元');
+            return false;
+        }
+        return true;
+    }
+
     // 處理註冊
     registerForm.addEventListener('submit', async function (e) {
         e.preventDefault();
         const name = document.getElementById('registerName').value;
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
+
+        const registerButton = e.target.querySelector('button[type="submit"]');
+        registerButton.disabled = true;
+
+        if (!validateRegisterInput(name, password)) {
+            registerButton.disabled = false;
+            return;
+        }
 
         try {
             const response = await fetch('/api/user', {
@@ -164,6 +202,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             showError('registerError', '系統錯誤，請稍後再試');
+        } finally {
+            registerButton.disabled = false;
         }
     });
 
@@ -172,6 +212,9 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
+
+        const loginButton = e.target.querySelector('button[type="submit"]');
+        loginButton.disabled = true;
 
         try {
             const response = await fetch('/api/user/auth', {
@@ -199,6 +242,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             showError('loginError', '系統錯誤，請稍後再試');
+        } finally {
+            loginButton.disabled = false;
         }
     });
 
@@ -239,4 +284,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 初始檢查登入狀態
     checkLoginStatus();
+    redirectIfNotLoggedInOnThankyou();
 });

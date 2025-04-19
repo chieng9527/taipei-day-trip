@@ -12,4 +12,8 @@ db_pool = pooling.MySQLConnectionPool(
 )
 
 def get_db_connection():
-    return db_pool.get_connection()
+    try:
+        return db_pool.get_connection()
+    except Exception as e:
+        print("取得資料庫連線失敗:", str(e))
+        raise

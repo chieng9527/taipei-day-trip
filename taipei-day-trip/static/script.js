@@ -1,6 +1,17 @@
 const apiUrl = "/api/attractions";
 const mrtUrl = "/api/mrts";
 let page = 0, nextPage = null, isLoading = false;
+let lastKeyword = "";
+
+// 共用搜尋處理函數
+function handleSearch(keyword) {
+  keyword = keyword.trim();
+  if (keyword === lastKeyword) return;  // 避免重複請求
+  lastKeyword = keyword;
+  page = 0;
+  nextPage = null;
+  fetchAttractions(keyword);
+}
 
 // 取得景點資料（支援搜尋）
 async function fetchAttractions(keyword = "") {
@@ -52,7 +63,7 @@ function renderAttractions(attractions) {
   container.appendChild(fragment);
 }
 
-// 設置 IntersectionObserver，自動載入更多資料
+// IntersectionObserver 自動加載下一頁景點資料
 const observer = new IntersectionObserver(entries => {
   if (entries[0].isIntersecting && nextPage !== null) {
     fetchAttractions(document.getElementById("searchInput").value);
@@ -64,22 +75,33 @@ function observeLastCard() {
   if (lastCard) observer.observe(lastCard);
 }
 
-// 設置搜尋功能
+// debounce 函數定義
+function debounce(func, delay) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
+// 搜尋欄設置
 function setupSearch() {
   const searchInput = document.getElementById("searchInput");
-  document.getElementById("searchBtn").addEventListener("click", () => resetSearch(searchInput.value));
+  const debouncedSearch = debounce(() => handleSearch(searchInput.value), 300);
+
+  document.getElementById("searchBtn").addEventListener("click", () => {
+    handleSearch(searchInput.value);
+  });
+
   searchInput.addEventListener("keydown", event => {
-    if (event.key === "Enter") resetSearch(searchInput.value);
+    if (event.key === "Enter") {
+      event.preventDefault();
+      debouncedSearch();
+    }
   });
 }
 
-function resetSearch(keyword) {
-  page = 0;
-  nextPage = null;
-  fetchAttractions(keyword);
-}
-
-// 取得捷運站列表並渲染
+// 取得捷運站資料
 async function fetchMRTStations() {
   try {
     const response = await fetch(mrtUrl);
@@ -100,40 +122,31 @@ function renderMRTStations(stations) {
     const stationElement = document.createElement("div");
     stationElement.className = "mrt-item";
     stationElement.textContent = station;
-    stationElement.addEventListener("click", () => resetSearch(station));
+    stationElement.addEventListener("click", () => {
+      if (station === lastKeyword) return;
+      handleSearch(station);
+    });
     fragment.appendChild(stationElement);
   });
 
   mrtList.appendChild(fragment);
 }
 
-// 設置捷運站滾動功能
+// 捷運滾動設置與箭頭滑動功能
 function setupMRTScroll() {
   const mrtList = document.getElementById("mrtList");
   const leftArrow = document.querySelector(".mrt__arrow--left");
   const rightArrow = document.querySelector(".mrt__arrow--right");
 
-  // 使用箭頭按鈕滾動
-  leftArrow.addEventListener("click", () => smoothScroll(-200));
-  rightArrow.addEventListener("click", () => smoothScroll(200));
-
-  // 使用新的滾輪處理方式
-  mrtList.addEventListener("wheel", (event) => {
-    if (Math.abs(event.deltaX) < Math.abs(event.deltaY)) {
-      event.preventDefault();
-      smoothScroll(event.deltaY);
-    }
-  }, { passive: false });
-
-  // 平滑滾動函數
-  function smoothScroll(offset) {
+  // 滑動捷運列
+  const smoothScroll = (offset) => {
     const currentScroll = mrtList.scrollLeft;
     mrtList.scrollTo({
       left: currentScroll + offset,
       behavior: 'smooth'
     });
 
-    // 處理循環滾動
+    // 簡易循環滾動效果
     setTimeout(() => {
       const maxScroll = mrtList.scrollWidth - mrtList.clientWidth;
       if (mrtList.scrollLeft >= maxScroll - 5) {
@@ -142,15 +155,43 @@ function setupMRTScroll() {
         mrtList.scrollTo({ left: maxScroll - 2, behavior: 'auto' });
       }
     }, 300);
-  }
+  };
+
+  leftArrow.addEventListener("click", () => smoothScroll(-200));
+  rightArrow.addEventListener("click", () => smoothScroll(200));
+
+  // 支援滑鼠滾輪水平滾動
+  mrtList.addEventListener("wheel", (event) => {
+    if (Math.abs(event.deltaX) < Math.abs(event.deltaY)) {
+      event.preventDefault();
+      smoothScroll(event.deltaY);
+    }
+  }, { passive: false });
 }
 
-// 初始化
+// 初始化主程式
 async function init() {
   await Promise.all([fetchAttractions(), fetchMRTStations()]);
 }
 
-setupSearch();
-setupMRTScroll();
-init();
+window.addEventListener("DOMContentLoaded", () => {
+  const body = document.querySelector("body");
+  const overlay = document.getElementById("loadingOverlay");
 
+  // 顯示 overlay 並隱藏內容
+  if (overlay) overlay.style.display = "flex";
+  body.classList.add("hide");
+
+  // 等待初始化完成後再移除遮罩與顯示內容
+  init()
+    .catch(err => console.error("初始化失敗", err))
+    .finally(() => {
+      requestAnimationFrame(() => {
+        if (overlay) overlay.style.display = "none";
+        body.classList.remove("hide");
+      });
+    });
+
+  setupSearch();
+  setupMRTScroll();
+});

@@ -88,7 +88,7 @@ hr {
 
 /* === 頁尾 === */
 .footer {
-  height: 104px;
+  min-height: 104px;
   background: #757575;
   color: white;
   text-align: center;
@@ -307,5 +307,34 @@ hr {
 @media (max-width: 360px) {
   .nav__menu {
     gap: 10px;
+  }
+}
+
+/* === LOADING === */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 8px solid #ccc;
+  border-top: 8px solid #448899;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
