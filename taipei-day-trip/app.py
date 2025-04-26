@@ -1,168 +1,55 @@
-from fastapi import FastAPI, Query, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI
+from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from config import settings
-from typing import Optional
+
+# === 導入路由 ===
+from routes.user_routes import router as user_router
+from routes.booking_routes import router as booking_router
+from routes.order_routes import router as order_router
+from routes.attraction_routes import router as attraction_router
+
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from database import get_db_connection
-from users import router as user_router
-from booking import router as booking_router
-from order import router as order_router
+from fastapi import Request
+
+
+# 自定義 StaticFiles 以加上長效 Cache-Control header
+class CacheControlStaticFiles(StaticFiles):
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 200:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
 
 app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)  # 壓縮大於1kb的回應
 
-# 註冊中介層與路由
-app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
-app.include_router(user_router)
-app.include_router(booking_router)
-app.include_router(order_router)
-
-# 靜態頁面路由
+# === 靜態頁面路由 ===
 @app.get("/", include_in_schema=False)
 async def index(request: Request):
-    return FileResponse("./static/index.html", media_type="text/html")
+    return FileResponse("./templates/index.html", media_type="text/html")
 
 @app.get("/attraction/{id}", include_in_schema=False)
 async def attraction(request: Request, id: int):
-    return FileResponse("./static/attraction.html", media_type="text/html")
+    return FileResponse("./templates/attraction.html", media_type="text/html")
 
 @app.get("/booking", include_in_schema=False)
 async def booking(request: Request):
-    return FileResponse("./static/booking.html", media_type="text/html")
+    return FileResponse("./templates/booking.html", media_type="text/html")
 
 @app.get("/thankyou", include_in_schema=False)
 async def thankyou(request: Request):
-    return FileResponse("./static/thankyou.html", media_type="text/html")
+    return FileResponse("./templates/thankyou.html", media_type="text/html")
 
-# 註冊靜態目錄
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# === 掛載靜態資源 ===
+app.mount("/static", CacheControlStaticFiles(directory="static"), name="static")
 
+# === 註冊 SessionMiddleware（用於處理 session）===
+app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
-# API 1: 取得所有景點（支援分頁與關鍵字搜尋）
-@app.get("/api/attractions")
-def get_attractions(page: int = Query(0, ge=0), keyword: Optional[str] = None):
-    try:
-        db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
-
-        limit = 12
-        offset = page * limit
-
-        # 計算總數
-        if keyword and keyword.strip():
-            count_query = """
-                SELECT COUNT(*) AS total
-                FROM attractions a
-                LEFT JOIN mrt_stations m ON a.mrt_id = m.id
-                WHERE a.name LIKE %s OR m.name LIKE %s
-            """
-            cursor.execute(count_query, (f"%{keyword}%", f"%{keyword}%"))
-        else:
-            cursor.execute("SELECT COUNT(*) AS total FROM attractions")
-
-        total_count = cursor.fetchone()["total"]
-
-        # 查詢景點資料
-        if keyword and keyword.strip():
-            query = """
-                SELECT a.id, a.name, a.category, a.description, a.address, 
-                       a.transport, m.name AS mrt, a.latitude, a.longitude,
-                       GROUP_CONCAT(i.image_url SEPARATOR ',') AS images
-                FROM attractions a
-                LEFT JOIN attraction_images i ON a.id = i.attraction_id
-                LEFT JOIN mrt_stations m ON a.mrt_id = m.id
-                WHERE a.name LIKE %s OR m.name LIKE %s
-                GROUP BY a.id
-                LIMIT %s OFFSET %s
-            """
-            cursor.execute(query, (f"%{keyword}%", f"%{keyword}%", limit, offset))
-        else:
-            query = """
-                SELECT a.id, a.name, a.category, a.description, a.address, 
-                       a.transport, m.name AS mrt, a.latitude, a.longitude,
-                       GROUP_CONCAT(i.image_url SEPARATOR ',') AS images
-                FROM attractions a
-                LEFT JOIN attraction_images i ON a.id = i.attraction_id
-                LEFT JOIN mrt_stations m ON a.mrt_id = m.id
-                GROUP BY a.id
-                LIMIT %s OFFSET %s
-            """
-            cursor.execute(query, (limit, offset))
-
-        results = cursor.fetchall()
-        for attraction in results:
-            attraction["images"] = attraction["images"].split(",") if attraction["images"] else []
-
-        next_page = page + 1 if offset + limit < total_count else None
-        return {"nextPage": next_page, "data": results}
-
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
-
-    finally:
-        if "db" in locals() and db.is_connected():
-            cursor.close()
-            db.close()
-
-
-# API 2: 取得單一景點資訊
-@app.get("/api/attraction/{attractionId}")
-def get_attraction(attractionId: int):
-    try:
-        db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
-
-        query = """
-            SELECT a.id, a.name, a.category, a.description, a.address, 
-                   a.transport, m.name AS mrt, a.latitude, a.longitude,
-                   GROUP_CONCAT(i.image_url SEPARATOR ',') AS images
-            FROM attractions a
-            LEFT JOIN attraction_images i ON a.id = i.attraction_id
-            LEFT JOIN mrt_stations m ON a.mrt_id = m.id
-            WHERE a.id = %s
-            GROUP BY a.id
-        """
-        cursor.execute(query, (attractionId,))
-        attraction = cursor.fetchone()
-
-        if not attraction:
-            return JSONResponse(status_code=400, content={"error": True, "message": "景點編號不正確"})
-
-        attraction["images"] = attraction["images"].split(",") if attraction["images"] else []
-        return {"data": attraction}
-
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
-
-    finally:
-        if "db" in locals() and db.is_connected():
-            cursor.close()
-            db.close()
-
-
-# API 3: 取得所有捷運站名稱（依據景點數排序）
-@app.get("/api/mrts")
-def get_mrts():
-    try:
-        db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
-
-        query = """
-            SELECT m.name, COUNT(a.id) AS attraction_count 
-            FROM mrt_stations m
-            LEFT JOIN attractions a ON m.id = a.mrt_id
-            GROUP BY m.name
-            ORDER BY attraction_count DESC, m.name ASC
-        """
-        cursor.execute(query)
-        results = [row["name"] for row in cursor.fetchall()]
-
-        return {"data": results}
-
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": True, "message": "伺服器內部錯誤"})
-
-    finally:
-        if "db" in locals() and db.is_connected():
-            cursor.close()
-            db.close()
+# === 註冊 API 路由（MVC：Controller 對應 View）===
+app.include_router(user_router, prefix="/api/user", tags=["User"])
+app.include_router(booking_router, prefix="/api", tags=["Booking"])
+app.include_router(order_router, prefix="/api", tags=["Order"])
+app.include_router(attraction_router, prefix="/api", tags=["Attraction"])
